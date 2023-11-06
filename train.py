@@ -1,4 +1,6 @@
 import torch.optim as optim
+import torch
+import torch.nn as nn
 
 def train(model, train_X, train_y, val_X, val_y):
     train_X_torch = torch.tensor(train_X, dtype=torch.float32)

@@ -13,7 +13,7 @@
 # breakpoint()
 # print(test_string_embedding)
 import torch
-from dataset import create_notebooks_data, get_llama_embeddings, create_dataset
+from dataset import create_notebooks_data, get_llama_embeddings, create_dataset, create_dataset_sample
 from models.SimpleNN import SimpleNN
 from train import train, test
 
@@ -28,7 +28,7 @@ hidden_dim = 128
 output_dim = train_y.shape[1]
 
 model = SimpleNN(input_dim, hidden_dim, output_dim).to(device)  # Move the model to the GPU if available
-
-model, training_losses, validation_losses, validation_accuracies = train(model, train_X, train_y, val_X, val_y, device)
-test_accuracy = test(model, test_X, test_y, device)
+print("Training model...")
+model, training_losses, validation_losses, validation_accuracies = train(model, train_X, train_y, val_X, val_y)
+test_accuracy = test(model, test_X, test_y)
 
