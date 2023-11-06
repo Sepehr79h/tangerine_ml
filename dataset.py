@@ -39,7 +39,14 @@ def get_llama_embeddings(llama_embeddings_path="../llama.cpp/models/llama-2-7b/g
     llama_model_path = llama_embeddings_path
     # embeddings = LlamaCppEmbeddings(model_path=llama_model_path)
     # If you want to specify the context window size for embedding, e.g. 2048
-    embeddings = LlamaCppEmbeddings(model_path=llama_model_path, n_ctx=2048, verbose=False)
+    # embeddings = LlamaCppEmbeddings(model_path=llama_model_path, n_ctx=2048, verbose=False)
+    embeddings = LlamaCppEmbeddings(model_path=llama_model_path,
+                                    n_ctx=2048,
+                                    verbose=True,
+                                    use_mlock=True,
+                                    n_gpu_layers=12,
+                                    n_threads=4,
+                                    n_batch=1000)
     return embeddings
 
 
