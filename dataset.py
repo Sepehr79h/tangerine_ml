@@ -1,12 +1,14 @@
 import json
-from sklearn.model_selection import train_test_split
-from keras.preprocessing.text import Tokenizer
-from keras.preprocessing.sequence import pad_sequences
+# from sklearn.model_selection import train_test_split
+# from keras.preprocessing.text import Tokenizer
+# from keras.preprocessing.sequence import pad_sequences
 from langchain.embeddings import LlamaCppEmbeddings
 from sklearn.preprocessing import LabelEncoder
-from keras.utils import to_categorical
+# from keras.utils import to_categorical
 from sklearn.model_selection import train_test_split
 from tqdm import tqdm
+import torch
+import torch.nn.functional as F
 
 
 def create_notebooks_data(notebooks_path, labels_path):
@@ -46,9 +48,9 @@ def create_dataset(notebooks_data, llama_embeddings):
     test_labels_encoded = label_encoder.transform([item['stage'] for item in test_data])
     val_labels_encoded = label_encoder.transform([item['stage'] for item in val_data])
     # One-hot encoding
-    train_labels_onehot = to_categorical(train_labels_encoded)
-    test_labels_onehot = to_categorical(test_labels_encoded)
-    val_labels_onehot = to_categorical(val_labels_encoded)
+    train_labels_onehot = F.one_hot(torch.tensor(train_labels_encoded)).numpy()
+    test_labels_onehot = F.one_hot(torch.tensor(test_labels_encoded)).numpy()
+    val_labels_onehot = F.one_hot(torch.tensor(val_labels_encoded)).numpy()
     # Convert each code in train, test, and validation sets to their corresponding embeddings
     train_embeddings = [llama_embeddings.embed_query(item['context']) for item in tqdm(train_data)]
     test_embeddings = [llama_embeddings.embed_query(item['context']) for item in tqdm(test_data)]
