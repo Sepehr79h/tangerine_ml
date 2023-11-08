@@ -69,11 +69,13 @@ model = model.to(device)
 # model, training_losses, validation_losses, validation_accuracies = train(model, train_loader, val_loader, optimizer, criterion, device, num_epochs=30)
 # # After training, you can use the trained model for testing
 # test_accuracy = test(model, test_loader, criterion, device)
-metric = load_metric("accuracy")
 def compute_metrics(eval_pred):
     logits, labels = eval_pred
     predictions = np.argmax(logits, axis=-1)
-    return metric.compute(predictions=predictions, references=labels)
+    correct_predictions = np.sum(predictions == labels)
+    total_predictions = len(labels)
+    accuracy = correct_predictions / total_predictions
+    return accuracy
 
 training_args = TrainingArguments(output_dir="test_trainer", overwrite_output_dir=True, logging_strategy="no",
                                   save_strategy="no", num_train_epochs=6, per_device_train_batch_size=1,
@@ -91,8 +93,17 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 print("Start Training Model")
 trainer.train()
 print("Start Evaluating Model combined topics")
+# predictions = trainer.predict(test_dataset)
+# print(predictions.predictions.shape, predictions.label_ids.shape)
+# labels = predictions.label_ids
+# preds = np.argmax(predictions.predictions, axis=-1)
+# print(metric.compute(predictions=preds, references=labels))
 predictions = trainer.predict(test_dataset)
 print(predictions.predictions.shape, predictions.label_ids.shape)
 labels = predictions.label_ids
 preds = np.argmax(predictions.predictions, axis=-1)
-print(metric.compute(predictions=preds, references=labels))
+
+correct_predictions = np.sum(preds == labels)
+total_predictions = len(labels)
+accuracy = correct_predictions / total_predictions
+print(accuracy)
