@@ -27,10 +27,12 @@ class MyDataset(Dataset):
     def __getitem__(self, idx):
         text = self.texts[idx]
         label = self.labels[idx]
-
+        input_ids = torch.tensor(np.array(text['input_ids']))
+        attention_mask = torch.tensor(np.array(text['attention_mask']))
+        label = torch.tensor(label)
         return {
-            'input_ids': np.array(text['input_ids']),
-            'attention_mask': np.array(text['attention_mask']),
+            'input_ids': input_ids,
+            'attention_mask': attention_mask,
             'label': label
         }
 
