@@ -1,6 +1,6 @@
 import os
 
-from datasets import metric
+from datasets import metric, load_metric
 from torch.utils.data import Dataset
 from transformers import AutoModelForSequenceClassification, AdamW, TrainingArguments, Trainer
 import torch.nn as nn
@@ -69,6 +69,7 @@ model = model.to(device)
 # model, training_losses, validation_losses, validation_accuracies = train(model, train_loader, val_loader, optimizer, criterion, device, num_epochs=30)
 # # After training, you can use the trained model for testing
 # test_accuracy = test(model, test_loader, criterion, device)
+metric = load_metric("accuracy")
 def compute_metrics(eval_pred):
     logits, labels = eval_pred
     predictions = np.argmax(logits, axis=-1)
