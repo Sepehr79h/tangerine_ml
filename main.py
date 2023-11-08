@@ -1,4 +1,5 @@
 # from langchain.embeddings import LlamaCppEmbeddings
+# from llama_cpp import LLama
 #
 # #Use Llama model for embedding
 # llama_model_path = "../llama.cpp/models/llama-2-7b/ggml-model-q4_0.gguf"
@@ -12,6 +13,38 @@
 # test_string_embedding = embeddings.embed_query(test_string)
 # breakpoint()
 # print(test_string_embedding)
+
+# from transformers import AutoTokenizer, AutoModelForSequenceClassification, AutoModel
+# import torch
+#
+# # Replace with the appropriate model name and tokenizer
+# model_name = "gpt2"
+# tokenizer = AutoTokenizer.from_pretrained(model_name)
+# tokenizer.add_special_tokens({'pad_token': '[PAD]'})  # Add a padding token
+#
+# model = AutoModelForSequenceClassification.from_pretrained(model_name, num_labels=5, pad_token_id=tokenizer.eos_token_id)  # Assuming 5 labels
+#
+# # Code cell to classify
+# code_cell = "import pandas as pd\n"
+#
+# # Tokenize the code cell
+# tokens = tokenizer.encode(code_cell, add_special_tokens=True, padding=True, truncation=True, max_length=128, return_tensors="pt")
+#
+# # Perform inference
+# with torch.no_grad():
+#     outputs = model(tokens)
+#     predicted_label = torch.argmax(outputs.logits, dim=1).item()
+#
+# # Map the predicted label to the corresponding category (e.g., Import, Wrangle, etc.)
+# categories = ["Import", "Wrangle", "Explore", "Model", "Evaluate"]
+# predicted_category = categories[predicted_label]
+#
+# print("Predicted category:", predicted_category)
+
+
+
+
+
 import torch
 from dataset import create_notebooks_data, get_llama_embeddings, create_dataset, create_dataset_sample
 from models.SimpleNN import SimpleNN
@@ -21,6 +54,7 @@ from train import train, test
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 notebooks_data = create_notebooks_data('notebooks.txt', 'id2stages.json')
+breakpoint()
 llama_embeddings = get_llama_embeddings()
 train_X, train_y, test_X, test_y, val_X, val_y = create_dataset(notebooks_data, llama_embeddings)
 input_dim = train_X.shape[1]
