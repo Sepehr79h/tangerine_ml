@@ -1,6 +1,5 @@
 import os
 
-from datasets import metric, load_metric
 from torch.utils.data import Dataset
 from transformers import AutoModelForSequenceClassification, AdamW, TrainingArguments, Trainer
 import torch.nn as nn
