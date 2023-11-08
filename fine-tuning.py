@@ -43,7 +43,7 @@ def create_dataset(model_name, notebooks_path='notebooks.txt', labels_path='id2s
     labels = [entry['stage'] for entry in notebooks_data]
     # Replace with the appropriate GPT-2 model name you intend to fine-tune
     tokenizer = AutoTokenizer.from_pretrained(model_name)
-    tokenizer.add_special_tokens({'pad_token': '[PAD]'})  # You can choose a different token if needed
+    # tokenizer.add_special_tokens({'pad_token': '[PAD]'})  # You can choose a different token if needed
     tokenized_code = [tokenizer(text, truncation=True, padding='max_length') for text in code_text]
     label_encoder = LabelEncoder()
     encoded_labels = label_encoder.fit_transform(labels)
@@ -100,16 +100,14 @@ def train_test(train_dataset, val_dataset, test_dataset, model_name):
 
 
 if __name__ == '__main__':
-    model_name = "gpt2"
+    model_name = "meta-llama/Llama-2-7b-chat-hf"
     train_dataset, val_dataset, test_dataset = create_dataset(model_name)
-    # train_test(train_dataset, val_dataset, test_dataset, model_name)
+    train_test(train_dataset, val_dataset, test_dataset, model_name)
 
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model = AutoModelForSequenceClassification.from_pretrained(model_name, num_labels=5)
-    optimizer = AdamW(model.parameters(), lr=1e-5)  # You can adjust the learning rate
-    criterion = nn.CrossEntropyLoss()
-    train_loader = DataLoader(train_dataset, batch_size=64, shuffle=True)
-    val_loader = DataLoader(val_dataset, batch_size=64)
-    test_loader = DataLoader(test_dataset, batch_size=64)
-    model, training_losses, validation_losses, validation_accuracies = train(model, train_loader, val_loader, optimizer, criterion, device, num_epochs=30)
-    test_accuracy = test(model, test_loader, criterion, device)
+    # optimizer = AdamW(model.parameters(), lr=1e-5)  # You can adjust the learning rate
+    # criterion = nn.CrossEntropyLoss()
+    # train_loader = DataLoader(train_dataset, batch_size=64, shuffle=True)
+    # val_loader = DataLoader(val_dataset, batch_size=64)
+    # test_loader = DataLoader(test_dataset, batch_size=64)
+    # model, training_losses, validation_losses, validation_accuracies = train(model, train_loader, val_loader, optimizer, criterion, device, num_epochs=30)
+    # test_accuracy = test(model, test_loader, criterion, device)
