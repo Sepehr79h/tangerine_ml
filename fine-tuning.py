@@ -27,9 +27,9 @@ class MyDataset(Dataset):
     def __getitem__(self, idx):
         text = self.texts[idx]
         label = self.labels[idx]
-        input_ids = torch.tensor(np.array(text['input_ids']))
-        attention_mask = torch.tensor(np.array(text['attention_mask']))
-        label = torch.tensor(label)
+        input_ids = np.array(text['input_ids'])
+        attention_mask = np.array(text['attention_mask'])
+        label = label
         return {
             'input_ids': input_ids,
             'attention_mask': attention_mask,
@@ -43,8 +43,8 @@ def create_dataset(model_name, notebooks_path='notebooks.txt', labels_path='id2s
     labels = [entry['stage'] for entry in notebooks_data]
     # Replace with the appropriate GPT-2 model name you intend to fine-tune
     tokenizer = AutoTokenizer.from_pretrained(model_name)
-    # tokenizer.add_special_tokens({'pad_token': '[PAD]'})  # You can choose a different token if needed
-    tokenized_code = [tokenizer(text, truncation=True, padding='max_length') for text in code_text]
+    tokenizer.add_special_tokens({'pad_token': '[PAD]'})  # You can choose a different token if needed
+    tokenized_code = [tokenizer(text, truncation=True, padding='max_length', max_length=768) for text in code_text]
     label_encoder = LabelEncoder()
     encoded_labels = label_encoder.fit_transform(labels)
     # Split the data into training, validation, and test sets
@@ -104,6 +104,9 @@ if __name__ == '__main__':
     train_dataset, val_dataset, test_dataset = create_dataset(model_name)
     train_test(train_dataset, val_dataset, test_dataset, model_name)
 
+    # device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    # model = AutoModelForSequenceClassification.from_pretrained(model_name, num_labels=5)
+    # model = model.to(device)
     # optimizer = AdamW(model.parameters(), lr=1e-5)  # You can adjust the learning rate
     # criterion = nn.CrossEntropyLoss()
     # train_loader = DataLoader(train_dataset, batch_size=64, shuffle=True)
