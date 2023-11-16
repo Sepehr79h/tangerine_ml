@@ -19,7 +19,6 @@ class SODataset(Dataset):
         self.labels = []
 
         for txt, label in zip(txt_list, label_list):
-            # breakpoint()
             prep_txt = f'<startoftext>Content: {txt}\nLabel: {label}<endoftext>'
 
             encodings_dict = tokenizer(prep_txt, truncation=True, padding="max_length")
@@ -64,7 +63,7 @@ def load_dataset(tokenizer, notebooks_path='notebooks.txt', labels_path='id2stag
     # # split test data to eval and test with 10% and 90% respectively
     # df_eval = df_test.sample(frac=0.1, random_state=42)
     # df_test = df_test.drop(df_eval.index)
-    notebooks_data = create_notebooks_data(notebooks_path, labels_path)
+    notebooks_data = create_notebooks_data(notebooks_path)
     code_text = [entry['context'] for entry in notebooks_data]
     labels = [entry['stage'] for entry in notebooks_data]
     train_texts, test_texts, train_labels, test_labels = train_test_split(code_text, labels, test_size=0.3,
@@ -125,7 +124,10 @@ if __name__ == '__main__':
     labels = predictions.label_ids
     preds = np.argmax(predictions.predictions, axis=-1)
 
-    print(metric.compute(predictions=preds, references=labels))
+    correct_predictions = np.sum(preds == labels)
+    total_predictions = len(labels)
+    accuracy = correct_predictions / total_predictions
+    print("Test Accuracy: ", accuracy)
 
     # Save Prediction result
     print("Saving prediction results flask topic")
@@ -135,7 +137,7 @@ if __name__ == '__main__':
     print("Saving model...")
 
     # trainer.save_model("./gpt2model_str_label_topic")
-    trainer.save_model("./models/combined_gpt2model_cd_topic")
+    trainer.save_model("./models/llama-2-chat-model")
 
     # Load model again to see if it works
 
