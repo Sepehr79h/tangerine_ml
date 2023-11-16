@@ -1,7 +1,6 @@
 import numpy as np  # linear algebra
 import pandas as pd  # data processing, CSV file I/O (e.g. pd.read_csv)
 import transformers
-from datasets import load_dataset, load_metric
 from sklearn.model_selection import train_test_split
 from transformers import AutoTokenizer
 from transformers import AutoModelForSequenceClassification
@@ -27,8 +26,9 @@ class SODataset(Dataset):
 
             self.input_ids.append(torch.tensor(encodings_dict['input_ids']))
             self.attention_mask.append(torch.tensor(encodings_dict['attention_mask']))
-            self.labels.append(label)
-
+            one_hot_label = torch.nn.functional.one_hot(torch.tensor(int(label)), num_classes=6).float()
+            self.labels.append(one_hot_label)
+        
     def __len__(self):
         return len(self.input_ids)
 
@@ -82,22 +82,23 @@ def load_dataset(tokenizer, notebooks_path='notebooks.txt', labels_path='id2stag
 
 if __name__ == '__main__':
     print("Load data")
-    tokenizer = AutoTokenizer.from_pretrained("meta-llama/Llama-2-7b-chat-hf")
+    tokenizer = AutoTokenizer.from_pretrained("gpt2-medium")
     tokenizer.pad_token = tokenizer.eos_token
     print("Tokenized data")
     train_dataset, eval_dataset, test_dataset, force_ids = load_dataset(tokenizer)
     vocab_size = tokenizer.vocab_size
     print("Create Model")
     # change the model name and num_labels if needed
-    model = AutoModelForSequenceClassification.from_pretrained("meta-llama/Llama-2-7b-chat-hf", num_labels=63, vocab_size=vocab_size,
+    model = AutoModelForSequenceClassification.from_pretrained("gpt2-medium", num_labels=6, vocab_size=vocab_size,
                                                                pad_token_id=tokenizer.eos_token_id)
-    metric = load_metric("accuracy")
-
 
     def compute_metrics(eval_pred):
         logits, labels = eval_pred
         predictions = np.argmax(logits, axis=-1)
-        return metric.compute(predictions=predictions, references=labels)
+        correct_predictions = np.sum(predictions == labels)
+        total_predictions = len(labels)
+        accuracy = correct_predictions / total_predictions
+        return accuracy
 
 
     training_args = TrainingArguments(output_dir="test_trainer", overwrite_output_dir=True, logging_strategy="no",
