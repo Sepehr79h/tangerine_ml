@@ -1,0 +1,12 @@
+accelerate
+datasets
+langchain
+llama-cpp-python
+nbformat
+openai
+openpyxl
+pip-chill
+scikit-learn
+tensorflow
+torchvision
+transformers
