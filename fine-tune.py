@@ -9,8 +9,8 @@ from transformers import TrainingArguments, Trainer
 from torch.utils.data import Dataset
 import os
 import torch
-from dataset import create_notebooks_data
-
+from torch.nn.parallel import DataParallel
+import json
 
 class SODataset(Dataset):
     def __init__(self, txt_list, label_list, tokenizer):
@@ -20,13 +20,14 @@ class SODataset(Dataset):
 
         for txt, label in zip(txt_list, label_list):
             prep_txt = f'<startoftext>Content: {txt}\nLabel: {label}<endoftext>'
-
-            encodings_dict = tokenizer(prep_txt, truncation=True, padding="max_length")
+            
+            encodings_dict = tokenizer(prep_txt, truncation=True, padding="max_length", max_length=24)
 
             self.input_ids.append(torch.tensor(encodings_dict['input_ids']))
             self.attention_mask.append(torch.tensor(encodings_dict['attention_mask']))
             one_hot_label = torch.nn.functional.one_hot(torch.tensor(int(label)), num_classes=6).float()
             self.labels.append(one_hot_label)
+            #breakpoint()
         
     def __len__(self):
         return len(self.input_ids)
@@ -40,6 +41,21 @@ class SODataset(Dataset):
         # return self.input_ids[idx], self.attention_mask[idx], self.labels[idx]
         return dic
 
+def create_notebooks_data(notebooks_path):
+    # Load the notebooks.txt data
+    with open(notebooks_path, 'r') as f:
+        notebooks_data = [json.loads(line) for line in f]
+    # # Load the id2stages.json data
+    # with open(labels_path, 'r') as f:
+    #     id2stages_data = json.load(f)
+    # # Map the stages
+    # for entry in notebooks_data:
+    #     notebook_id = entry['file']
+    #     line_no = entry['target_lineno']
+    #     # Minus 1 because lists are 0-indexed and line numbers start from 1
+    #     stage = id2stages_data[notebook_id][line_no - 1]
+    #     entry['stage'] = stage
+    return notebooks_data
 
 def load_dataset(tokenizer, notebooks_path='notebooks.txt', labels_path='id2stages.json'):
     # # Concatenate the Flask and Python datasets
@@ -81,19 +97,31 @@ def load_dataset(tokenizer, notebooks_path='notebooks.txt', labels_path='id2stag
 
 if __name__ == '__main__':
     print("Load data")
-    tokenizer = AutoTokenizer.from_pretrained("gpt2-medium")
+    tokenizer = AutoTokenizer.from_pretrained("meta-llama/Llama-2-7b-chat-hf")
     tokenizer.pad_token = tokenizer.eos_token
+    tokenizer.add_special_tokens({'pad_token': '<pad>'})
     print("Tokenized data")
     train_dataset, eval_dataset, test_dataset, force_ids = load_dataset(tokenizer)
     vocab_size = tokenizer.vocab_size
     print("Create Model")
     # change the model name and num_labels if needed
-    model = AutoModelForSequenceClassification.from_pretrained("gpt2-medium", num_labels=6, vocab_size=vocab_size,
+    model = AutoModelForSequenceClassification.from_pretrained("meta-llama/Llama-2-7b-chat-hf", num_labels=6, vocab_size=vocab_size,
                                                                pad_token_id=tokenizer.eos_token_id)
+    model.resize_token_embeddings(len(tokenizer))
+    
+    # device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    # if torch.cuda.device_count() > 1:
+    #     print("Using", torch.cuda.device_count(), "GPUs.")
+    #     model = DataParallel(model)
+    # model.to(device)
+    
+    # # torch.cuda.set_per_process_memory_fraction(0.5)
 
     def compute_metrics(eval_pred):
-        logits, labels = eval_pred
+        logits, one_hot_labels = eval_pred
         predictions = np.argmax(logits, axis=-1)
+        # Convert one-hot encoded labels to class indices
+        labels = np.argmax(one_hot_labels, axis=-1)
         correct_predictions = np.sum(predictions == labels)
         total_predictions = len(labels)
         accuracy = correct_predictions / total_predictions
@@ -116,6 +144,7 @@ if __name__ == '__main__':
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print("Start Training Model")
+    torch.cuda.empty_cache()
     trainer.train()
     print("Start Evaluating Model combined topics")
     predictions = trainer.predict(test_dataset)
