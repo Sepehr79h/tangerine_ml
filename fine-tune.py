@@ -11,6 +11,8 @@ import os
 import torch
 from torch.nn.parallel import DataParallel
 import json
+from peft import LoraConfig, PeftModel
+from trl import SFTTrainer
 
 class SODataset(Dataset):
     def __init__(self, txt_list, label_list, tokenizer):
@@ -33,11 +35,19 @@ class SODataset(Dataset):
         return len(self.input_ids)
 
     def __getitem__(self, idx):
+
+        # if len(input_ids.shape) == 1:  # Check if the shape is [feature_size] when batch size is 1
+        #     input_ids = input_ids.unsqueeze(0)
+        #     attention_mask = attention_mask.unsqueeze(0)
+        
         dic = {
-            'input_ids': self.input_ids[idx],
-            'attention_mask': self.attention_mask[idx],
+            'input_ids': self.input_ids[idx].unsqueeze(0),
+            'attention_mask': self.attention_mask[idx].unsqueeze(0),
             'labels': self.labels[idx]
         }
+        print("Input IDs shape:", dic['input_ids'].shape)
+        print("Attention Mask shape:", dic['attention_mask'].shape)
+        print("Labels shape:", dic['labels'].shape)
         # return self.input_ids[idx], self.attention_mask[idx], self.labels[idx]
         return dic
 
@@ -127,15 +137,25 @@ if __name__ == '__main__':
         accuracy = correct_predictions / total_predictions
         return accuracy
 
+    # LoRA Config
+    peft_parameters = LoraConfig(
+        lora_alpha=16,
+        lora_dropout=0.1,
+        r=8,
+        bias="none",
+        task_type="CAUSAL_LM"
+    )
 
     training_args = TrainingArguments(output_dir="test_trainer", overwrite_output_dir=True, logging_strategy="no",
                                       save_strategy="no", num_train_epochs=6, per_device_train_batch_size=1,
                                       per_device_eval_batch_size=1, evaluation_strategy="epoch")
 
-    trainer = Trainer(
+    trainer = SFTTrainer(
         model=model,
         args=training_args,
         train_dataset=train_dataset,
+        dataset_text_field="text",
+        peft_config=peft_parameters,
         eval_dataset=eval_dataset,
         compute_metrics=compute_metrics,
     )
