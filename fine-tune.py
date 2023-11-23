@@ -11,6 +11,8 @@ import os
 import torch
 from torch.nn.parallel import DataParallel
 import json
+from peft import LoraConfig, PeftModel, get_peft_model, prepare_model_for_int8_training
+
 
 class SODataset(Dataset):
     def __init__(self, txt_list, label_list, tokenizer):
@@ -108,7 +110,7 @@ if __name__ == '__main__':
     model = AutoModelForSequenceClassification.from_pretrained("meta-llama/Llama-2-7b-chat-hf", num_labels=6, vocab_size=vocab_size,
                                                                pad_token_id=tokenizer.eos_token_id)
     model.resize_token_embeddings(len(tokenizer))
-    
+    #exit()    
     # device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     # if torch.cuda.device_count() > 1:
     #     print("Using", torch.cuda.device_count(), "GPUs.")
@@ -116,6 +118,16 @@ if __name__ == '__main__':
     # model.to(device)
     
     # # torch.cuda.set_per_process_memory_fraction(0.5)
+
+    # LoRA Config
+    peft_parameters = LoraConfig(
+        lora_alpha=16,
+        lora_dropout=0.1,
+        r=8,
+        bias="none",
+        task_type="CAUSAL_LM"
+    )
+    model = get_peft_model(model, peft_parameters)
 
     def compute_metrics(eval_pred):
         logits, one_hot_labels = eval_pred
