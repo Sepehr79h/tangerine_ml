@@ -137,7 +137,7 @@ if __name__ == '__main__':
         correct_predictions = np.sum(predictions == labels)
         total_predictions = len(labels)
         accuracy = correct_predictions / total_predictions
-        return accuracy
+        return {"accuracy": accuracy}
 
 
     training_args = TrainingArguments(output_dir="test_trainer", overwrite_output_dir=True, logging_strategy="no",
@@ -158,13 +158,15 @@ if __name__ == '__main__':
     print("Start Training Model")
     torch.cuda.empty_cache()
     trainer.train()
+    trainer.save_model("./trained_model")
     print("Start Evaluating Model combined topics")
     predictions = trainer.predict(test_dataset)
     print(predictions.predictions.shape, predictions.label_ids.shape)
 
-    labels = predictions.label_ids
+    one_hot_labels = predictions.label_ids
     preds = np.argmax(predictions.predictions, axis=-1)
 
+    labels = np.argmax(one_hot_labels, axis=-1)
     correct_predictions = np.sum(preds == labels)
     total_predictions = len(labels)
     accuracy = correct_predictions / total_predictions
