@@ -1,10 +1,13 @@
-langchain
-llama-cpp-python
+accelerate
+#datasets
+#langchain
+#llama-cpp-python
 nbformat
-openai
+#openai
 openpyxl
 pandas
-pip-chill
+#pip-chill
 scikit-learn
 tensorflow
 torchvision
+transformers

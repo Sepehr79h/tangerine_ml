@@ -27,7 +27,8 @@ class SODataset(Dataset):
 
             self.input_ids.append(torch.tensor(encodings_dict['input_ids']))
             self.attention_mask.append(torch.tensor(encodings_dict['attention_mask']))
-            one_hot_label = torch.nn.functional.one_hot(torch.tensor(int(label)), num_classes=6).float()
+            one_hot_label = torch.nn.functional.one_hot(torch.tensor(int(label)-1), num_classes=5).float()
+            #breakpoint()
             self.labels.append(one_hot_label)
             #breakpoint()
         
@@ -96,7 +97,6 @@ def load_dataset(tokenizer, notebooks_path='notebooks.txt', labels_path='id2stag
 
     return train_dataset, eval_dataset, test_dataset, force_ids
 
-
 if __name__ == '__main__':
     print("Load data")
     tokenizer = AutoTokenizer.from_pretrained("meta-llama/Llama-2-7b-chat-hf")
@@ -107,7 +107,7 @@ if __name__ == '__main__':
     vocab_size = tokenizer.vocab_size
     print("Create Model")
     # change the model name and num_labels if needed
-    model = AutoModelForSequenceClassification.from_pretrained("meta-llama/Llama-2-7b-chat-hf", num_labels=6, vocab_size=vocab_size,
+    model = AutoModelForSequenceClassification.from_pretrained("meta-llama/Llama-2-7b-chat-hf", num_labels=5, vocab_size=vocab_size,
                                                                pad_token_id=tokenizer.eos_token_id)
     model.resize_token_embeddings(len(tokenizer))
     #exit()    
@@ -158,7 +158,7 @@ if __name__ == '__main__':
     print("Start Training Model")
     torch.cuda.empty_cache()
     trainer.train()
-    trainer.save_model("./trained_model")
+    # trainer.save_model("./trained_model")
     print("Start Evaluating Model combined topics")
     predictions = trainer.predict(test_dataset)
     print(predictions.predictions.shape, predictions.label_ids.shape)
@@ -180,15 +180,11 @@ if __name__ == '__main__':
     print("Saving model...")
 
     # trainer.save_model("./gpt2model_str_label_topic")
-    trainer.save_model("./models/llama-2-chat-model")
+    # trainer.save_model("./output/llama-2-chat-model")
 
-    # Load model again to see if it works
+    
 
-    # print("Loading model...")
-    # saved_model = AutoModelForSequenceClassification.from_pretrained("./gpt2model")
-    # print("Loading Successful")
-    # saved_predictions = saved_model.predict(test_dataset)
-    # print(saved_predictions.predictions.shape, saved_predictions.label_ids.shape)
-    # saved_labels = saved_predictions.label_ids
-    # saved_preds = np.argmax(saved_predictions.predictions, axis=-1)
-    # print(metric.compute(predictions=saved_preds, references=saved_labels))
+    
+    
+
+    
